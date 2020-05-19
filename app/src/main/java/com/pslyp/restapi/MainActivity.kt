@@ -1,22 +1,25 @@
 package com.pslyp.restapi
 
-import android.app.ActionBar
+import android.content.Context
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
-import android.view.ViewGroup
 import android.widget.*
+import com.google.android.material.textfield.TextInputLayout
+import okhttp3.*
+import java.io.IOException
 
 class MainActivity : AppCompatActivity() {
 
     lateinit var addButton: Button
-    lateinit var removeButton: Button
+    lateinit var textView: TextView
     lateinit var formLayout: LinearLayout
 
-    lateinit var textView: TextView
-    lateinit var form: LinearLayout
+    lateinit var methodSpinner: Spinner
+    lateinit var httpSpinner: Spinner
+    lateinit var urlText: TextInputLayout
 
-    lateinit var removeImage: ImageView
+    lateinit var requestButton: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -27,52 +30,68 @@ class MainActivity : AppCompatActivity() {
 
     fun initInstance() {
         addButton = findViewById(R.id.add_button)
-        removeButton = findViewById(R.id.remove_button)
         formLayout = findViewById(R.id.form_layout)
 
         textView = findViewById(R.id.text_view_1)
 
-        addButton.setOnClickListener(addFormLayout)
-        removeButton.setOnClickListener(removeFormLayout)
+        addButton.setOnClickListener(addForm)
+
+        methodSpinner = findViewById(R.id.method_spinner)
+        httpSpinner = findViewById(R.id.http_spinner)
+        urlText = findViewById(R.id.url_text_input)
+
+        requestButton = findViewById(R.id.request_button)
+
+        val methods: ArrayList<String> = ArrayList()
+        methods.add("GET")
+        methods.add("POST")
+        methods.add("PUT")
+        methods.add("DELETE")
+        methods.add("PATCH")
+
+        val methodAdapter: ArrayAdapter<String> = ArrayAdapter(this, R.layout.support_simple_spinner_dropdown_item, methods)
+        methodSpinner.adapter = methodAdapter
+
+        val https: ArrayList<String> = ArrayList()
+        https.add("HTTP")
+        https.add("HTTPS")
+        https.add("HTTP2")
+        https.add("AUTO")
+
+        val httpAdapter: ArrayAdapter<String> = ArrayAdapter(this, R.layout.support_simple_spinner_dropdown_item, https)
+        httpSpinner.adapter = httpAdapter
+
+        requestButton.setOnClickListener{view ->
+
+            var text: String = "Method: " + methodSpinner.selectedItem.toString() + "\n"
+            text += "Url: " + httpSpinner.selectedItem.toString() + "://" + urlText.editText?.text.toString()
+
+            Toast.makeText(this, text, Toast.LENGTH_LONG).show()
+
+            val client: OkHttpClient = OkHttpClient()
+
+            val url: String = urlText.editText?.text.toString()
+
+            val request: Request = Request.Builder()
+                .url(url)
+                .build()
+
+            client.newCall(request).enqueue(object: Callback {
+                override fun onFailure(call: Call, e: IOException) {
+
+                }
+
+                override fun onResponse(call: Call, response: Response) {
+                    textView.text = response.code.toString()
+                }
+            })
+        }
     }
 
-    var addFormLayout = View.OnClickListener { view ->
-        var selectCheckBox = CheckBox(this)
-        var nameEditText = EditText(this)
-        var valueEditText = EditText(this)
-        removeImage = ImageView(this)
-
-        nameEditText.layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1.0f)
-        nameEditText.hint = "name"
-
-        valueEditText.layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1.0f)
-        valueEditText.hint = "value"
-
-        removeImage.setImageResource(R.drawable.ic_close_black_24dp)
-        removeImage.setOnClickListener(removeFormLayout)
-
-        form = LinearLayout(this)
-        form.addView(selectCheckBox)
-        form.addView(nameEditText)
-        form.addView(valueEditText)
-        form.addView(removeImage)
+    var addForm = View.OnClickListener { view ->
+        var form: LinearLayout = From(this, formLayout).create()
 
         formLayout.addView(form)
     }
 
-    var removeFormLayout = View.OnClickListener { view ->
-
-//        var parent: ViewGroup = form.parent as ViewGroup
-//        var index: Int = parent.indexOfChild(form)
-
-        var index: Int = formLayout.indexOfChild(form)
-
-        var index2 = form.indexOfChild(removeImage)
-        Toast.makeText(this, index2.toString(), Toast.LENGTH_LONG).show()
-
-        if(formLayout.childCount != 0) {
-            formLayout.removeViewAt(0)
-            textView.text = index.toString()
-        }
-    }
 }
