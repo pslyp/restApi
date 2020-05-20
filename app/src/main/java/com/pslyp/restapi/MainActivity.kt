@@ -3,6 +3,7 @@ package com.pslyp.restapi
 import android.content.Context
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.*
 import com.google.android.material.textfield.TextInputLayout
@@ -68,7 +69,7 @@ class MainActivity : AppCompatActivity() {
 
             Toast.makeText(this, text, Toast.LENGTH_LONG).show()
 
-            val client: OkHttpClient = OkHttpClient()
+            val client = OkHttpClient()
 
             val url: String = urlText.editText?.text.toString()
 
@@ -82,7 +83,18 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 override fun onResponse(call: Call, response: Response) {
-                    textView.text = response.code.toString()
+//                    textView.text = response.code.toString()
+
+//                    Log.e("Request", response.code.toString())
+//                    Log.e("ฺBody", response.body?.string())
+
+                    if(response.code == 200) {
+                        this@MainActivity.runOnUiThread(Runnable {
+//                            setText(response)
+                            Toast.makeText(this@MainActivity, response.body?.string(), Toast.LENGTH_LONG).show()
+                        })
+//                        setText(response)
+                    }
                 }
             })
         }
@@ -93,5 +105,29 @@ class MainActivity : AppCompatActivity() {
 
         formLayout.addView(form)
     }
+
+    fun setText(res: Response) {
+        textView.text = res.body?.string()
+    }
+
+//    fun GET(url: String): Response {
+//        val client = OkHttpClient()
+//
+//        val request = Request.Builder()
+//                .url(url)
+//                .build()
+//
+//        client.newCall(request).enqueue(object: Callback {
+//
+//            override fun onFailure(call: Call, e: IOException) {
+//
+//            }
+//
+//            override fun onResponse(call: Call, response: Response) {
+//
+//            }
+//
+//        })
+//    }
 
 }
