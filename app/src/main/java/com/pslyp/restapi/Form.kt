@@ -41,8 +41,6 @@ class From(context: Context, layout: LinearLayout): LinearLayout(context) {
 
         if(layout.childCount != 0) {
             layout.removeViewAt(index)
-
-            Toast.makeText(context, index.toString(), Toast.LENGTH_LONG).show()
         }
     }
 
