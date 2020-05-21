@@ -3,12 +3,7 @@ package com.pslyp.restapi
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
-import android.view.ViewGroup
 import android.widget.*
-import androidx.core.view.children
-import androidx.core.view.forEach
-import androidx.core.view.forEachIndexed
-import androidx.core.view.iterator
 import com.google.android.material.textfield.TextInputLayout
 import okhttp3.Call
 import okhttp3.Callback
@@ -17,6 +12,8 @@ import okhttp3.Response
 import java.io.IOException
 
 class MainActivity : AppCompatActivity() {
+
+    var forms: FormLayout? = null
 
     lateinit var addButton: Button
     lateinit var textView: TextView
@@ -36,6 +33,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun initInstance() {
+        forms = FormLayout(this, formLayout)
+
         addButton = findViewById(R.id.add_button)
         formLayout = findViewById(R.id.form_layout)
 
@@ -72,52 +71,48 @@ class MainActivity : AppCompatActivity() {
     }
 
     var addForm = View.OnClickListener { view ->
-        var form = From(this, formLayout).create()
-
-        formLayout.addView(form)
+        forms?.create()
     }
 
     val request = View.OnClickListener { view ->
-        var text: String = "Method: " + methodSpinner.selectedItem.toString() + "\n"
-        text += "Url: " + httpSpinner.selectedItem.toString() + "://" + urlText.editText?.text.toString()
+        var text = "Method: " + methodSpinner.selectedItem.toString() + "\n"
+        text += "Url: " + httpSpinner.selectedItem.toString().toLowerCase() + "://" + urlText.editText?.text.toString()
 
         Toast.makeText(this, text, Toast.LENGTH_LONG).show()
 
-        val url = urlText.editText?.text.toString()
+        val url = httpSpinner.selectedItem.toString().toLowerCase() + "://" + urlText.editText?.text.toString()
 
         val client = OkHttpClient()
         val request = OkHttpRequest(client)
 
-//        request.GET(url, object: Callback {
-//            override fun onFailure(call: Call, e: IOException) {
-//
-//            }
-//
-//            override fun onResponse(call: Call, response: Response) {
-//                runOnUiThread {
-//                    textView.text = response.code.toString()
-//
-//                    Toast.makeText(this@MainActivity, response.body?.string(), Toast.LENGTH_LONG).show()
-//                }
-//            }
-//        })
+        val methodPosition = methodSpinner.selectedItemPosition
+        when(methodPosition) {
+            0 -> request.GET(url, object: Callback {
+                override fun onFailure(call: Call, e: IOException) {
 
-        val forms = formLayout.getChildAt(0) as ViewGroup
-        val name = (forms.getChildAt(1) as EditText).text.toString().trim()
-        val value = (forms.getChildAt(2) as EditText).text.toString().trim()
+                }
 
-        val params = HashMap<String,String>()
-        params.put(name, value)
+                override fun onResponse(call: Call, response: Response) {
+                    runOnUiThread {
+                        textView.text = response.code.toString()
 
-        request.POST(url, params, object: Callback {
-            override fun onFailure(call: Call, e: IOException) {
+                        Toast.makeText(this@MainActivity, response.body?.string(), Toast.LENGTH_LONG).show()
+                    }
+                }
+            })
+            1 -> forms?.getParams()?.let {
+                request.POST(url, it, object: Callback {
+                    override fun onFailure(call: Call, e: IOException) {
 
+                    }
+
+                    override fun onResponse(call: Call, response: Response) {
+
+                    }
+                })
             }
+        }
 
-            override fun onResponse(call: Call, response: Response) {
-
-            }
-        })
     }
 
 }
